@@ -1,0 +1,18 @@
+{
+  "nav": {
+    "home": "Home",
+    "tourism": "Tourism",
+    "destinations": "Destinations",
+    "maps": "Maps",
+    "map": "Map",
+    "tourism-companies": "Tourism Companies",
+    "guides": "Tourism Companies",
+    "about": "About",
+    "planCta": "Plan Suggestion",
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "hi": "Hi",
+    "toggleLanguage": "Switch language"
+  }
+}
