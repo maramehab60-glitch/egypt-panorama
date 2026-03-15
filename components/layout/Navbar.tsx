@@ -2,14 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { getNationalityFlag, getNationalityLabel, type UserProfile } from "@/lib/userProfile";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-
-type StoredUser = {
-  email: string;
-  name?: string;
-};
 
 function BrandPyramidIcon() {
   return (
@@ -25,17 +21,21 @@ function BrandPyramidIcon() {
 }
 
 export default function Navbar() {
-  const [user, setUser] = useState<StoredUser | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [locale, setLocale] = useState<"en" | "ar">("en");
   const t = useTranslations("nav");
   const pathname = usePathname();
 
+  const userDisplayName = user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(" ");
+  const userNationalityFlag = getNationalityFlag(user?.nationality);
+  const userNationality = getNationalityLabel(user?.nationality, locale);
+
   useEffect(() => {
     try {
       const rawUser = localStorage.getItem("user");
       if (rawUser) {
-        setUser(JSON.parse(rawUser) as StoredUser);
+        setUser(JSON.parse(rawUser) as UserProfile);
       }
     } catch {
       setUser(null);
@@ -131,9 +131,16 @@ export default function Navbar() {
 
           {isReady && user ? (
             <>
-              <span className="hidden rounded-full border border-amber-200/70 bg-white/65 px-3 py-1 text-xs font-semibold text-amber-900 dark:border-slate-600 dark:bg-slate-900/70 dark:text-amber-100 lg:inline-flex">
-                {user.name ? `${t("hi")}, ${user.name}` : user.email}
-              </span>
+              <div className="hidden items-center gap-1.5 lg:flex">
+                <span className="rounded-full border border-amber-200/70 bg-white/65 px-3 py-1 text-xs font-semibold text-amber-900 dark:border-slate-600 dark:bg-slate-900/70 dark:text-amber-100">
+                  {userDisplayName ? `${t("hi")}, ${userDisplayName}` : user.email}
+                </span>
+                {userNationality && (
+                  <span className="rounded-full border border-sky-200/60 bg-sky-100/70 px-3 py-1 text-[0.68rem] font-semibold text-sky-900 dark:border-sky-700/70 dark:bg-sky-900/45 dark:text-sky-100">
+                    {[userNationalityFlag, userNationality].filter(Boolean).join(" ")}
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={handleLogout}

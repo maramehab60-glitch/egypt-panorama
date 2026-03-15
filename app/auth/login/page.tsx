@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import type { UserProfile } from "@/lib/userProfile"
 import { useLocale } from "next-intl"
 import { useState } from "react"
 
@@ -26,7 +27,19 @@ export default function LoginPage() {
   function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
 
-    const user = {
+    let existingUser: Partial<UserProfile> = {}
+
+    try {
+      const storedUser = localStorage.getItem("user")
+      if (storedUser) {
+        existingUser = JSON.parse(storedUser) as UserProfile
+      }
+    } catch {
+      existingUser = {}
+    }
+
+    const user: UserProfile = {
+      ...existingUser,
       email,
     }
 

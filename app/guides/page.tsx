@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function GuidesRedirectPage() {
+export default function GuidesPage() {
   redirect("/tourism-companies");
 }

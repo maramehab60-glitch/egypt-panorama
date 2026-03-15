@@ -5,7 +5,7 @@ const locales = ["en", "ar"] as const;
 type Locale = (typeof locales)[number];
 
 function toSupportedLocale(value?: string): Locale {
-  return value === "ar" ? "ar" : "en";
+  return locales.includes(value as Locale) ? (value as Locale) : "en";
 }
 
 export default getRequestConfig(async () => {

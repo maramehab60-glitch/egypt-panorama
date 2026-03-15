@@ -291,6 +291,15 @@ const EN_COPY = {
   perNight: "per night",
   readyToBook: "Ready to Book?",
   browseCompanies: "Browse All Companies ◈",
+  partialPreview: "Partial Itinerary Preview",
+  partialMessage: "You are seeing a preview of your itinerary. Subscribe to unlock the complete day-by-day plan.",
+  unlockTitle: "Unlock Full Trip Plan",
+  unlockMessage: "Full access to the complete itinerary, all activities, and insider tips requires a subscription.",
+  oneMonth: "1 Month",
+  threeMonths: "3 Months",
+  twelveMonths: "12 Months",
+  subscribe: "Subscribe",
+  unlocked: "Full plan unlocked",
 };
 
 const AR_COPY = {
@@ -330,6 +339,15 @@ const AR_COPY = {
   perNight: "لكل ليلة",
   readyToBook: "جاهز للحجز؟",
   browseCompanies: "تصفح كل الشركات ◈",
+  partialPreview: "معاينة جزئية لخطة الرحلة",
+  partialMessage: "تشاهد الآن معاينة فقط. اشترك لفتح الخطة الكاملة يوما بيوم.",
+  unlockTitle: "فتح الخطة الكاملة للرحلة",
+  unlockMessage: "الوصول الكامل الى البرنامج وجميع الانشطة ونصائح السفر يتطلب اشتراكا.",
+  oneMonth: "شهر واحد",
+  threeMonths: "3 اشهر",
+  twelveMonths: "12 شهرا",
+  subscribe: "اشترك",
+  unlocked: "تم فتح الخطة الكاملة",
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -442,12 +460,16 @@ function PlanSuggestionContent() {
   const [plan,    setPlan]    = useState<GeneratedPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
+  const [selectedSubscription, setSelectedSubscription] = useState<"1" | "3" | "12" | "">("");
+  const [isSubscribed, setIsSubscribed] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const handleGenerate = () => {
     setLoading(true);
     setTimeout(() => {
       setPlan(generatePlan(form));
+      setSelectedSubscription("");
+      setIsSubscribed(false);
       setLoading(false);
       setTimeout(() => resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
     }, 1300);
@@ -478,6 +500,13 @@ function PlanSuggestionContent() {
   const companyOptions: OptionItem[] = COMPANIES.map((value) => ({ value, label: toLocalizedCompany(value) }));
   const budgetOptions: OptionItem[] = BUDGETS.map((value) => ({ value, label: toLocalizedBudget(value) }));
   const styleOptions: OptionItem[] = STYLES.map((value) => ({ value, label: toLocalizedStyle(value) }));
+  const previewDays = plan ? plan.days.slice(0, Math.min(2, plan.days.length)) : [];
+  const visibleDays = plan ? (isSubscribed ? plan.days : previewDays) : [];
+  const subscriptionOptions: Array<{ value: "1" | "3" | "12"; label: string }> = [
+    { value: "1", label: copy.oneMonth },
+    { value: "3", label: copy.threeMonths },
+    { value: "12", label: copy.twelveMonths },
+  ];
 
   return (
     <div dir={isArabic ? "rtl" : "ltr"} style={{ background: "#0D0A06", minHeight: "100vh", fontFamily: "'Lora', serif", color: "#F7F0E3" }}>
@@ -620,11 +649,84 @@ function PlanSuggestionContent() {
 
               {/* Day cards */}
               <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-                {plan.days.map((day, i) => <DayCard key={day.day} day={day} index={i} isArabic={isArabic} />)}
+                <div style={{ background: "rgba(42,123,155,0.08)", border: "1px solid rgba(42,123,155,0.3)", borderRadius: "10px", padding: "0.85rem 1rem", marginBottom: "0.35rem" }}>
+                  <p style={{ fontFamily: "'Cinzel', serif", fontSize: "0.64rem", letterSpacing: "0.2em", textTransform: "uppercase", color: "#6BB0CC", marginBottom: "0.35rem" }}>{copy.partialPreview}</p>
+                  <p style={{ fontSize: "0.8rem", color: "rgba(247,240,227,0.62)", fontStyle: "italic", lineHeight: 1.55 }}>{copy.partialMessage}</p>
+                </div>
+                {visibleDays.map((day, i) => <DayCard key={day.day} day={day} index={i} isArabic={isArabic} />)}
               </div>
 
+              {!isSubscribed && (
+                <div style={{ marginTop: "1.2rem", background: "linear-gradient(160deg,#1A1208,#0A1520)", border: "1px solid rgba(232,160,0,0.24)", borderRadius: "16px", padding: "1.45rem", boxShadow: "0 16px 45px rgba(0,0,0,0.35)", animation: "fadeUp 0.6s ease both" }}>
+                  <p style={{ fontFamily: "'Cinzel Decorative', serif", fontSize: "1.15rem", color: "#F7F0E3", marginBottom: "0.5rem" }}>
+                    {copy.unlockTitle}
+                  </p>
+                  <p style={{ fontSize: "0.85rem", color: "rgba(247,240,227,0.58)", lineHeight: 1.6, marginBottom: "1rem", fontStyle: "italic" }}>
+                    {copy.unlockMessage}
+                  </p>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "0.65rem", marginBottom: "0.95rem" }}>
+                    {subscriptionOptions.map((option) => {
+                      const selected = selectedSubscription === option.value;
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setSelectedSubscription(option.value)}
+                          style={{
+                            padding: "0.75rem 0.55rem",
+                            borderRadius: "10px",
+                            border: `1px solid ${selected ? "rgba(232,160,0,0.68)" : "rgba(255,255,255,0.16)"}`,
+                            background: selected ? "rgba(232,160,0,0.16)" : "rgba(255,255,255,0.03)",
+                            color: selected ? "#E8A000" : "rgba(247,240,227,0.78)",
+                            fontFamily: "'Cinzel', serif",
+                            fontSize: "0.72rem",
+                            letterSpacing: "0.07em",
+                            cursor: "pointer",
+                            transition: "all 0.25s",
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={!selectedSubscription}
+                    onClick={() => setIsSubscribed(true)}
+                    style={{
+                      width: "100%",
+                      padding: "0.9rem 1rem",
+                      borderRadius: "10px",
+                      border: "1px solid transparent",
+                      background: !selectedSubscription ? "rgba(255,255,255,0.05)" : "linear-gradient(135deg,#E8A000,#C9A84C)",
+                      color: !selectedSubscription ? "rgba(247,240,227,0.35)" : "#0D0A06",
+                      fontFamily: "'Cinzel', serif",
+                      fontSize: "0.72rem",
+                      letterSpacing: "0.2em",
+                      textTransform: "uppercase",
+                      cursor: !selectedSubscription ? "not-allowed" : "pointer",
+                      fontWeight: 700,
+                    }}
+                  >
+                    {copy.subscribe}
+                  </button>
+                </div>
+              )}
+
+              {isSubscribed && (
+                <div style={{ marginTop: "1rem", background: "rgba(74,139,92,0.12)", border: "1px solid rgba(74,139,92,0.35)", borderRadius: "10px", padding: "0.8rem 0.95rem" }}>
+                  <p style={{ fontFamily: "'Cinzel', serif", fontSize: "0.68rem", letterSpacing: "0.13em", textTransform: "uppercase", color: "#4A8B5C" }}>
+                    {copy.unlocked}
+                  </p>
+                </div>
+              )}
+
               {/* Tips */}
-              <div style={{ marginTop: "1.5rem", background: "#110E09", border: "1px solid rgba(74,139,92,0.22)", borderRadius: "14px", padding: "1.5rem", animation: `fadeUp 0.6s ease ${plan.days.length * 0.07 + 0.1}s both` }}>
+              {isSubscribed && (
+                <div style={{ marginTop: "1.5rem", background: "#110E09", border: "1px solid rgba(74,139,92,0.22)", borderRadius: "14px", padding: "1.5rem", animation: `fadeUp 0.6s ease ${plan.days.length * 0.07 + 0.1}s both` }}>
                 <p style={{ fontFamily: "'Cinzel', serif", fontSize: "0.65rem", letterSpacing: "0.3em", textTransform: "uppercase", color: "#4A8B5C", marginBottom: "1rem" }}>{copy.insiderTips}</p>
                 <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "0.65rem" }}>
                   {plan.tips.map((tip, i) => (
@@ -635,6 +737,7 @@ function PlanSuggestionContent() {
                   ))}
                 </ul>
               </div>
+              )}
             </div>
 
             {/* ── RIGHT — Summary Card ── */}
