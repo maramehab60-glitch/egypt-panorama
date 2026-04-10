@@ -5,10 +5,15 @@ $data = json_decode(file_get_contents("php://input"), true);
 
 $days = $data['days'];
 $destination = $data['destination'];
+$budget = $data['budget'] ?? null;
 
 $sql = "SELECT * FROM activities 
-        JOIN destinations ON activities.destination_id = destinations.id
-        WHERE destinations.name = '$destination'";
+JOIN destinations ON activities.destination_id = destinations.id
+WHERE destinations.name = '$destination'";
+
+if($budget){
+    $sql .= " AND price <= $budget";
+}
 
 $result = $conn->query($sql);
 
